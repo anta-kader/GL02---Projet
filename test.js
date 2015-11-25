@@ -3,3 +3,5 @@ var x = function() {
 };
 
 x();
+
+var i = 2;
