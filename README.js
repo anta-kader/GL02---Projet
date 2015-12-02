@@ -1,5 +1,4 @@
-/*
-
+console.log(
 Projet GL02 - Equipe Les Jambon-Beurre
 Xuefei DONG
 Théo DUVAL
@@ -14,5 +13,9 @@ Nous vous proposons ici une librairie écrite en JavaScript permettant les manip
 Pré-requis 
 Cette libraire nécéssite l'installation de Node.js, un interpréteur javascript pour exécuter du code localement.
 Pour l’installer sur vos machines personnelles, rendez-vous sur : https://nodejs.org/en/download/
- 
-*/
+
+Modifications apportées 
+Nous avons pris l'initiative d'apporter quelques modifications aux spécifications fournies par l'équipe MOA
+- Le format de données du téléphone et du mobile n'est pas 10DIGIT mais *(DIGIT / "+" / "(" / ")" / WSP) afin de 
+pouvoir accepeter les numéros avec indicatifs ou avec espaces. 
+)
