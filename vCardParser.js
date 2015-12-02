@@ -3,6 +3,10 @@
 * prompt ne fonctionne pas avec Node.js car la fonction ne peut pas être appelé coté serveur (comme avec Node.Js) 
 * mais seulement coté client (tel qu'un navigateur web)
 * solution --> http://stackoverflow.com/questions/24291909/prompt-not-defined-using-node-from-command-line
+* 
+* Utiliser rl.question ? 
+* ici > https://nodejs.org/api/readline.html#readline_rl_question_query_callback
+* 
 **/
 
 /* Problème à régler...
