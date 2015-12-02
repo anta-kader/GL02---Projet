@@ -21,7 +21,7 @@ process.stdin.on('readable', function() {
 
 var fs = require("fs");
 
-fs.readFile("Hawa.vcf", 'utf8', function (err,data) {
+fs.readFile("JohnDoe.vcf", 'utf8', function (err,data) {
 	if (err) {
 		return console.log(err)
  	}
@@ -54,6 +54,12 @@ var vCardParser = function(){
 }
 
 //Parser procedure
+
+// Stops the parsing process when called and print error message
+vCardParser.prototype.err = function(msg){
+	console.log("Parsing Error ! -- msg : "+msg);
+	process.exit(0);
+}
 
 // tokenize : tranform the data input into a list
 vCardParser.prototype.tokenize = function(data){
@@ -156,14 +162,17 @@ vCardParser.prototype.courriel = function(dataTab) {
 	var value = dataTab[1];
 	var courriel = "";
 	var id = property.indexOf("EMAIL;PREF;INTERNET");
-	if(id !== -1)
-		courriel = value[id];
-	else {
+	if(id === -1)
 		id = property.indexOf("EMAIL;INTERNET");
-		if(id !== -1)
+	if(id !== -1) {
 		courriel = value[id];
-	}
-	return courriel;
+		//check format
+		/*if(courriel.match())
+			return courriel;
+		else 
+			this.err("Courriel non conforme");*/
+	} else
+		return courriel;
 }
 
 /**
@@ -174,9 +183,17 @@ vCardParser.prototype.telephone = function(dataTab) {
 	var value = dataTab[1];
 	var telephone = "";
 	var id = property.indexOf("TEL;HOME;VOICE");
-	if(id !== -1)
+	if(id !== -1){
 		telephone = value[id];
-	return telephone;
+		//check format before return
+		/* wrong format given
+		if(telephone.match(/[0-9]{10}/))
+			return telephone;
+		else
+			this.err("Telephone non conforme");
+	} else*/
+		return telephone;
+	
 }
 
 /**
@@ -189,6 +206,13 @@ vCardParser.prototype.mobile = function(dataTab) {
 	var id = property.indexOf("TEL;CELL;VOICE");
 	if(id !== -1)
 		mobile = value[id];
+		//check format before return
+			/* wrong format given
+			if(mobile.match(/[0-9]{10}/))
+				return mobile;
+			else
+				this.err("Mobile non conforme");
+		} else*/
 	return mobile;
 }
 
