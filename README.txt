@@ -15,5 +15,4 @@ Pour l’installer sur vos machines personnelles, rendez-vous sur : https://node
 
 Modifications apportées 
 Nous avons pris l'initiative d'apporter quelques modifications aux spécifications fournies par l'équipe MOA
-- Le format de données du téléphone et du mobile n'est pas 10DIGIT mais *(DIGIT / "+" / "(" / ")" / WSP) afin de 
-pouvoir accepeter les numéros avec indicatifs ou avec espaces.
+- Le format de données du téléphone et du mobile n'est pas 10DIGIT mais *(DIGIT / "+" / "(" / ")" / WSP) afin de pouvoir accepeter les numéros avec indicatifs ou avec espaces.
