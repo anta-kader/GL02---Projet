@@ -183,7 +183,7 @@ vCardParser.prototype.telephone = function(dataTab) {
 	var value = dataTab[1];
 	var telephone = "";
 	var id = property.indexOf("TEL;HOME;VOICE");
-	if(id !== -1){
+	if(id !== -1)//{
 		telephone = value[id];
 		//check format before return
 		/* wrong format given
