@@ -9,29 +9,48 @@
 * 
 **/
 
-/* Problème à régler...
-console.log("Veuillez insérer l'url du fichier à importer");
-process.stdin.setEncoding('utf8');
-var fileToParse;
-process.stdin.on('readable', function() {
-    fileToParse = process.stdin.read();
-});*/
+/* Pour ne pas avoir écire à chaque fois qu'on test
+var readline = require('readline');
 
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+rl.question("Veuillez insérer l'url du fichier à importer \n", function(fileToParse) {
+	
+	//launch import
+	var fs = require("fs");
+
+	fs.readFile(fileToParse, 'utf8', function (err,data) {
+		if (err) {
+			return console.log("Fichier noo")
+	 	}
+		analyzer = new vCardParser();
+		var input = analyzer.tokenize(data);
+		var dataTab = analyzer.getData(input);
+		analyzer.parse(dataTab);
+		console.log(analyzer.contact);
+	
+	});
+
+	rl.close();
+}); */
 
 
 var fs = require("fs");
 
-fs.readFile("JohnDoe.vcf", 'utf8', function (err,data) {
-	if (err) {
-		return console.log(err)
- 	}
-	analyzer = new vCardParser();
-	var input = analyzer.tokenize(data);
-	var dataTab = analyzer.getData(input);
-	analyzer.parse(dataTab);
-	console.log(analyzer.contact);
+	fs.readFile("JohnDoe.vcf", 'utf8', function (err,data) {
+		if (err) {
+			return console.log("Fichier noo")
+	 	}
+		analyzer = new vCardParser();
+		var input = analyzer.tokenize(data);
+		var dataTab = analyzer.getData(input);
+		analyzer.parse(dataTab);
+		console.log(analyzer.contact);
 	
-});
+	});
 
 
 //Contact --> construct a new Contact
@@ -123,9 +142,16 @@ vCardParser.prototype.identite = function(dataTab) {
 	var value = dataTab[1];
 	var identite = [];
 	var id = property.indexOf("FN");
-	if(id !== -1)
-		identite = value[id].split(" ");
-	return identite;
+	if(id !== -1){
+		identite = value[id];
+		//check format before return
+		matched = identite.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+		if(identite === matched[0])
+			return identite.split(" ");
+		else
+			this.err("Organisation non conforme");		
+	} else 
+		return identite.split(" ");
 }
 
 /**
@@ -136,9 +162,16 @@ vCardParser.prototype.organisation = function(dataTab) {
 	var value = dataTab[1];
 	var organisation = "";
 	var id = property.indexOf("ORG");
-	if(id !== -1)
+	if(id !== -1){
 		organisation = value[id];
-	return organisation;
+		//check format before return
+		matched = organisation.match(/([a-z0-9âäàéèùêëîïôöçñ]|\s)+/i);
+		if(organisation === matched[0])
+			return organisation;
+		else
+			this.err("Organisation non conforme");
+	} else
+		return organisation;
 }
 
 /**
@@ -149,9 +182,16 @@ vCardParser.prototype.fonction = function(dataTab) {
 	var value = dataTab[1];
 	var fonction = "";
 	var id = property.indexOf("TITLE");
-	if(id !== -1)
+	if(id !== -1){
 		fonction = value[id];
-	return fonction;
+		//check format before return
+		matched = fonction.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+		if(fonction === matched[0])
+			return fonction;
+		else
+			this.err("Fonction non conforme");
+	} else
+		return fonction;
 }
 
 /**
@@ -166,12 +206,13 @@ vCardParser.prototype.courriel = function(dataTab) {
 		id = property.indexOf("EMAIL;INTERNET");
 	if(id !== -1) {
 		courriel = value[id];
-		//check format
-		/*if(courriel.match())
+		//check format before return
+		matched = courriel.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
+		if(courriel === matched[0])
 			return courriel;
-		else 
-			this.err("Courriel non conforme");*/
-	} else
+		else
+			this.err("Courriel non conforme");
+	}else
 		return courriel;
 }
 
@@ -183,16 +224,16 @@ vCardParser.prototype.telephone = function(dataTab) {
 	var value = dataTab[1];
 	var telephone = "";
 	var id = property.indexOf("TEL;HOME;VOICE");
-	if(id !== -1)//{
+	if(id !== -1){
 		telephone = value[id];
 		//check format before return
-		/* wrong format given
-		if(telephone.match(/[0-9]{10}/))
+		matched = telephone.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
+		if(telephone === matched[0])
 			return telephone;
 		else
 			this.err("Telephone non conforme");
-	} else*/
-		return telephone;
+	}else
+		return telephone; 
 	
 }
 
@@ -204,16 +245,16 @@ vCardParser.prototype.mobile = function(dataTab) {
 	var value = dataTab[1];
 	var mobile = "";
 	var id = property.indexOf("TEL;CELL;VOICE");
-	if(id !== -1)
+	if(id !== -1){
 		mobile = value[id];
 		//check format before return
-			/* wrong format given
-			if(mobile.match(/[0-9]{10}/))
-				return mobile;
-			else
-				this.err("Mobile non conforme");
-		} else*/
-	return mobile;
+		matched = mobile.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+		if(mobile === matched[0])
+			return mobile;
+		else
+			this.err("Mobile non conforme");
+	} else
+		return mobile;
 }
 
 vCardParser.prototype.parse = function(dataTab) {
