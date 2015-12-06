@@ -1,69 +1,47 @@
-/** Récupérer url du fichier à importer
-* var fileToParse = prompt("Insérer le lien du fichier à importer");
-* prompt ne fonctionne pas avec Node.js car la fonction ne peut pas être appelé coté serveur (comme avec Node.Js) 
-* mais seulement coté client (tel qu'un navigateur web)
-* solution --> http://stackoverflow.com/questions/24291909/prompt-not-defined-using-node-from-command-line
-* 
-* Utiliser rl.question ? 
-* ici > https://nodejs.org/api/readline.html#readline_rl_question_query_callback
-* 
-**/
-
-/* Pour ne pas avoir écire à chaque fois qu'on test
-var readline = require('readline');
-
-var rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-rl.question("Veuillez insérer l'url du fichier à importer \n", function(fileToParse) {
-	
-	//launch import
-	var fs = require("fs");
-
-	fs.readFile(fileToParse, 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Fichier noo")
-	 	}
-		analyzer = new vCardParser();
-		var input = analyzer.tokenize(data);
-		var dataTab = analyzer.getData(input);
-		analyzer.parse(dataTab);
-		console.log(analyzer.contact);
-	
-	});
-
-	rl.close();
-}); */
-
-
-var fs = require("fs");
-
-	fs.readFile("JohnDoe.vcf", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Fichier noo")
-	 	}
-		analyzer = new vCardParser();
-		var input = analyzer.tokenize(data);
-		var dataTab = analyzer.getData(input);
-		analyzer.parse(dataTab);
-		console.log(analyzer.contact);
-	
-	});
 
 
 //Contact --> construct a new Contact
-var Contact = function(nom, prenom, organisation, fonction, courriel, telephone, mobile){
+var Contact = function(nom, prenom, organisation, fonction, telephone, mobile, courriel){
 	this.nom = nom;
 	this.prenom = prenom;
 	this.organisation = organisation;
 	this.fonction = fonction;
-	this.courriel = courriel;
 	this.telephone = telephone;
 	this.mobile = mobile;
+	this.courriel = courriel;
 }
 
+//Add "write" property to contact to be able to add it to the database (text file)
+Contact.prototype.write = function (){
+	return this.nom + ";" + this.prenom + ";" + this.organisation + ";" + this.fonction + ";" + this.telephone + ";" + this.mobile + ";" + this.courriel + "\n";
+}
+
+
+//check if a contact is equal to another one
+Contact.prototype.isEqualTo = function(c) {
+	if(this.nom === c.nom && this.prenom === c.prenom && 
+		this.organisation === c.organisation && this.fonction === c.fonction && 
+		this.telephone === c.telephone && this.mobile === c.mobile && 
+		this.courriel === c.courriel)
+			return true;
+	else
+			return false;
+	
+}
+
+//check if a contact is in the array
+Contact.prototype.isInArray = function(array) {
+	var res = false;
+	for (var i = 0; i < array.length; i++)
+		if(array[i].isEqualTo(this))
+			res = true;
+	return res;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Parser procedure
 
 //vCardParser
 var vCardParser = function(){
@@ -71,8 +49,6 @@ var vCardParser = function(){
 	this.contact;
 	this.symb = ["BEGIN:VCARD", "FN", "ORG", "TITLE", "EMAIL;PREF;INTERNET", "EMAIL;INTERNET", "TEL;HOME;VOICE", "TEL;CELL;VOICE", "END:VCARD"];
 }
-
-//Parser procedure
 
 // Stops the parsing process when called and print error message
 vCardParser.prototype.err = function(msg){
@@ -82,7 +58,6 @@ vCardParser.prototype.err = function(msg){
 
 // tokenize : tranform the data input into a list
 vCardParser.prototype.tokenize = function(data){
-	//return data.split(/(\r\n|: )/);
 	var separator = /(\r\n|: )/;
 	data = data.split(separator);
 	data = data.filter(function(val, idx){ 
@@ -195,28 +170,6 @@ vCardParser.prototype.fonction = function(dataTab) {
 }
 
 /**
- * extract courriel
-**/
-vCardParser.prototype.courriel = function(dataTab) {
-	var property = dataTab[0];
-	var value = dataTab[1];
-	var courriel = "";
-	var id = property.indexOf("EMAIL;PREF;INTERNET");
-	if(id === -1)
-		id = property.indexOf("EMAIL;INTERNET");
-	if(id !== -1) {
-		courriel = value[id];
-		//check format before return
-		matched = courriel.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
-		if(courriel === matched[0])
-			return courriel;
-		else
-			this.err("Courriel non conforme");
-	}else
-		return courriel;
-}
-
-/**
  * extract telephone
 **/
 vCardParser.prototype.telephone = function(dataTab) {
@@ -257,19 +210,165 @@ vCardParser.prototype.mobile = function(dataTab) {
 		return mobile;
 }
 
+/**
+
+ * extract courriel
+**/
+vCardParser.prototype.courriel = function(dataTab) {
+	var property = dataTab[0];
+	var value = dataTab[1];
+	var courriel = "";
+	var id = property.indexOf("EMAIL;PREF;INTERNET");
+	if(id === -1)
+		id = property.indexOf("EMAIL;INTERNET");
+	if(id !== -1) {
+		courriel = value[id];
+		//check format before return
+		matched = courriel.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
+		if(courriel === matched[0])
+			return courriel;
+		else
+			this.err("Courriel non conforme");
+	}else
+		return courriel;
+}
+
 vCardParser.prototype.parse = function(dataTab) {
 	var id = this.identite(dataTab);
 	this.contact = 
 		new Contact(id[1], id[0], 
 					this.organisation(dataTab), 
 					this.fonction(dataTab), 
-					this.courriel(dataTab), 
 					this.telephone(dataTab), 
-					this.mobile(dataTab)
+					this.mobile(dataTab), 
+					this.courriel(dataTab)
 	);
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Il faut vérifier chaque propriété pour voir si son format est conforme à celui donné dans le cahier des charges...
+//fonction pour parser un fichier --> lancer avec la commande "parse"
+var parseVCard = function(){
+	var readline = require('readline');
+
+	var rl = readline.createInterface({
+	  input: process.stdin,
+	  output: process.stdout
+	});
+
+	rl.question("Veuillez insérer l'url du fichier à importer \n", function(fileToParse) {	
+		//launch import
+		var fs = require("fs");
+
+		fs.readFile("Hawa.vcf", 'utf8', function (err,data) {
+			if (err) {
+				return console.log("Fichier noo")
+		 	}
+			analyzer = new vCardParser();
+			var input = analyzer.tokenize(data);
+			var dataTab = analyzer.getData(input);
+			analyzer.parse(dataTab);
+			console.log(analyzer.contact);
+			//Add the contact to a database (here it's a simple text file)
+			fs.appendFile('database.txt', analyzer.contact.write(), function (err) {
+				if (err) throw err;
+				console.log('Contact ajouté !');
+			});		
+		});
+		rl.close();
+	}); 
+}
+
+
+//fonction afficher les contacts --> lancer avec la commande "display"
+var displayContactList = function(){
+	var fs = require("fs");
+	fs.readFile("database.txt", 'utf8', function (err,data) {
+		if (err) {
+			return console.log("Fichier noo")
+	 	}
+		//récupérer chaque ligne (ligne = entrée) de la base de données
+		data = data.split("\n");
+		//on arrete la boucle à data.length-1 car la dernière ligne du fichier est vide
+		var liste = [];
+		for(var i = 0; i < data.length-1; i++){
+			ligne = data[i].split(";");
+			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
+			liste.push(cnt);	
+		}	
+		console.log(liste);
+	})
+};
+
+//fonction effacer les doublons --> lancer avec la commande "clear"
+var effacerDoublons = function(){
+	var fs = require("fs");
+	fs.readFile("database.txt", 'utf8', function (err,data) {
+		if (err) {
+			return console.log("Fichier noo")
+	 	}
+		//récupérer les contacts dans un tableau
+		data = data.split("\n");
+		var liste = [];
+		for(var i = 0; i < data.length-1; i++){
+			ligne = data[i].split(";");
+			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
+			liste.push(cnt);	
+		}	
+		//effacer les doublons	du tableau
+		var listeCleared = [];
+		for(var i = 0; i < liste.length; i++){
+			if(!liste[i].isInArray(listeCleared))
+				listeCleared.push(liste[i]);
+		}	
+		//Effacer les doublons dans la BD
+		// --> effacer tout ce que contient le fichier
+		fs.writeFile('database.txt', "", function (err) {
+			if (err) throw err;
+		});
+		// --> réécrire les données à partir du tableau sans les doublons
+		for(var i = 0; i < listeCleared.length; i++){
+			fs.appendFile('database.txt', listeCleared[i].write(), function (err) {
+				if (err) throw err;
+			});
+		}
+		console.log("Doublons effacés !");
+	})
+};
+
+//fonction pour modifier un contact --> lancer avec la commande "modif"
+var modifierContact = function(nom, prenom){
+	
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Check les commandes pour lancer les fonctions
+
+var arg = process.argv.slice();
+console.log(arg);
+
+switch(arg[2]){
+	case "parse":
+		parseVCard();
+		break;
+	case "display":
+		displayContactList();
+		break;
+	case "clear":
+		effacerDoublons();
+		break;
+	case "modif":
+		modifierContact();
+		break;
+	default:
+		console.log("Command not found")
+}
+
+
+
+
+
 
