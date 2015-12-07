@@ -337,6 +337,7 @@ var effacerDoublons = function(){
 	})
 };
 
+<<<<<<< HEAD
 
 //get a contact id in an array using nom and prenom
 var extractContact = function(nom, prenom, array){
@@ -464,8 +465,14 @@ var modifierContact = function(nom, prenom, property, newVal){
 			}
 		}
 	});	
+=======
+//fonction pour modifier un contact --> lancer avec la commande "modif"
+function editVcard(file,attribut,value){
+>>>>>>> origin/master
 	
-};
+	file.attribut=value;
+	
+} ;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
