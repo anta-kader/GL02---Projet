@@ -338,9 +338,11 @@ var effacerDoublons = function(){
 };
 
 //fonction pour modifier un contact --> lancer avec la commande "modif"
-var modifierContact = function(nom, prenom){
+function editVcard(file,attribut,value){
 	
-};
+	file.attribut=value;
+	
+} ;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
