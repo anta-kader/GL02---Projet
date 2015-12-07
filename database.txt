@@ -1,1 +1,2 @@
 Doe;John;Capgemini;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
+Doe;John;Google;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com

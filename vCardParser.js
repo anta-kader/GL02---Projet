@@ -16,6 +16,12 @@ Contact.prototype.write = function (){
 	return this.nom + ";" + this.prenom + ";" + this.organisation + ";" + this.fonction + ";" + this.telephone + ";" + this.mobile + ";" + this.courriel + "\n";
 }
 
+//to be able to export the contact on a CSV format
+Contact.prototype.writeCsv = function (){
+	var tel = this.telephone.replace(/\s|\(|\)/g,"");
+	var mob = this.mobile.replace(/\s|\(|\)/g,"");
+	return this.nom + ";" + this.prenom + ";" + this.organisation + ";" + this.fonction + ";" + tel + ";" + mob + ";" + this.courriel + "\n";
+}
 
 //check if a contact is equal to another one
 Contact.prototype.isEqualTo = function(c) {
@@ -467,6 +473,50 @@ var modifierContact = function(nom, prenom, property, newVal){
 	
 };
 
+/**
+ * Exporter la liste de contact en un fichier csv --> lancer avec la commande "export"
+**/
+var exportContactListe = function(){
+	var readline = require('readline');
+
+	var rl = readline.createInterface({
+	  input: process.stdin,
+	  output: process.stdout
+	});
+
+	rl.question("Veuillez insérer l'url du fichier à exporter (sans l'extension) \n", function(fileToExport) {	
+		
+		//launch import
+		var fs = require("fs");
+		
+		fs.readFile("database.txt", 'utf8', function (err,data) {
+			if (err) {
+				return console.log("Fichier noo")
+		 	}
+
+			//récupérer les contacts dans un tableau
+			data = data.split("\n");
+			var liste = [];
+			for(var i = 0; i < data.length-1; i++){
+				ligne = data[i].split(";");
+				var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
+				liste.push(cnt);	
+			}
+			//créer fichier à exporter avec en-tête csv
+			var enTete = "First Name;Last Name;Company;Job Title;Mobile Phone;Home Phone;E-mail Address\n";
+			fs.writeFile(fileToExport + ".csv", enTete, function (err) {
+						if (err) throw err;
+					});
+			//ajouter chaque contact dans le fichier
+			for(var i = 0; i < liste.length; i++){		
+				fs.appendFile(fileToExport + ".csv", liste[i].writeCsv(), function (err) {
+							if (err) throw err;
+						});
+			}
+		});
+		rl.close();
+	}); 
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -486,6 +536,9 @@ switch(arg[2]){
 		break;
 	case "modif":
 		modifierContact(arg[3], arg[4], arg[5], arg[6]);
+		break;
+	case "export":
+		exportContactListe();
 		break;
 	default:
 		console.log("Command not found")

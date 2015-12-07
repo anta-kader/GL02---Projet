@@ -1,5 +1,7 @@
 var x = function() {
-  console.log("Hello")
+  var x = "(09) 5 6 ";
+  console.log(x);
+  console.log(x.replace(/\s|\(|\)/g,""));
 };
 
 x();
