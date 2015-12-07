@@ -261,7 +261,7 @@ var parseVCard = function(){
 		//launch import
 		var fs = require("fs");
 
-		fs.readFile("Hawa.vcf", 'utf8', function (err,data) {
+		fs.readFile(fileToParse, 'utf8', function (err,data) {
 			if (err) {
 				return console.log("Fichier noo")
 		 	}
@@ -337,8 +337,133 @@ var effacerDoublons = function(){
 	})
 };
 
-//fonction pour modifier un contact --> lancer avec la commande "modif"
-var modifierContact = function(nom, prenom){
+
+//get a contact id in an array using nom and prenom
+var extractContact = function(nom, prenom, array){
+	var contact;	
+	var i = 0;
+	while(!contact && i < array.length) {
+		if (array[i].nom === nom && array[i].prenom === prenom)
+			contact = i;
+		 i++;
+	}
+	return contact;
+	
+}
+
+
+/**
+ * fonction pour modifier un contact --> lancer avec la commande "modif nom prenom property newVal"
+ * nom --> nom du contact à modifier
+ * prenom --> prenom du contact à modifier
+ * property --> propriété du contact à modifier (nom, prenom, ..., courriel)
+ * newVal --> valeur par laquelle remplacer la valeur actuelle de la propriété
+**/
+var modifierContact = function(nom, prenom, property, newVal){
+
+	var fs = require("fs");
+	fs.readFile("database.txt", 'utf8', function (err,data) {
+		if (err) {
+			return console.log("Fichier noo")
+	 	}
+		//récupérer les contacts dans un tableau
+		data = data.split("\n");
+		var liste = [];
+		for(var i = 0; i < data.length-1; i++){
+			ligne = data[i].split(";");
+			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
+			liste.push(cnt);	
+		}
+
+		//récupérer le contact à modifier
+		var contactID = extractContact(nom, prenom, liste);
+
+		//effectuer la modification si le contact existe
+		if(contactID === undefined ){
+			console.log("Erreur ! Contact " + nom + " " + prenom + " non trouvé");
+			process.exit(0);
+		} else {
+			switch (property) {
+				case "nom" :
+					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+					if(matched[0] === newVal) {
+						liste[contactID].nom = newVal;
+						console.log("Nom contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "prenom" :
+					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+					if(matched[0] === newVal) {
+						liste[contactID].prenom = newVal;
+						console.log("Prenom contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "organisation" :
+					matched = newVal.match(/([a-z0-9âäàéèùêëîïôöçñ]|\s)+/i);
+					if(matched[0] === newVal) {
+						liste[contactID].organisation = newVal;
+						console.log("Organisation contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "fonction" :
+					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+					if(matched[0] === newVal) {
+						liste[contactID].nom = newVal;
+						console.log("Fonction contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "telephone" :
+					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+					if(matched[0] === newVal) {
+						liste[contactID].telephone = newVal;
+						console.log("Téléphone contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "mobile" :
+					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+					if(matched[0] === newVal) {
+						liste[contactID].mobile = newVal;
+						console.log("Mobile contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;
+				case "courriel" :
+					matched = newVal.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
+					if(matched[0] === newVal) {
+						liste[contactID].courriel = newVal;
+						console.log("Courriel contact modifié !");			
+					}
+					else
+						console.log("Format inavlide");
+					break;		
+				default:
+					break;
+			}
+
+			//Effectuer la modif dans la BD
+			// --> effacer tout ce que contient le fichier
+			fs.writeFile('database.txt', "", function (err) {
+				if (err) throw err;
+			});
+			// --> réécrire les données à partir du tableau sans les doublons
+			for(var i = 0; i < liste.length; i++){
+				fs.appendFile('database.txt', liste[i].write(), function (err) {
+					if (err) throw err;
+				});
+			}
+		}
+	});	
 	
 };
 
@@ -348,7 +473,6 @@ var modifierContact = function(nom, prenom){
 //Check les commandes pour lancer les fonctions
 
 var arg = process.argv.slice();
-console.log(arg);
 
 switch(arg[2]){
 	case "parse":
@@ -361,7 +485,7 @@ switch(arg[2]){
 		effacerDoublons();
 		break;
 	case "modif":
-		modifierContact();
+		modifierContact(arg[3], arg[4], arg[5], arg[6]);
 		break;
 	default:
 		console.log("Command not found")

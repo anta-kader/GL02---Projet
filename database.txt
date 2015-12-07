@@ -1,2 +1,1 @@
-Doe;John;Google;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
-Hawa;Tanti;;;;004915253875972;bhfsaar@yahoo.de
+Doe;John;Capgemini;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com

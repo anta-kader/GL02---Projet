@@ -1,6 +1,6 @@
 BEGIN:VCARD
 VERSION:2.1
-N;LANGUAGE=fr:Doe;John
+N;LANGUAGE=fr:Doe;John 
 FN:John Doe
 ORG:Google
 TITLE:Developper Test
