@@ -1,6 +1,2 @@
-DOE;james;Google;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
-DOE;JOHN;Capgemini;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
-DUPONT;JEAN;Microsoft;Vendeur;(09) 50 40 30 20;(06) 50 40 30 20;jeandupont@gmail.com
+DOE;JOHN;Google;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
 COULIBALY;FATOU;MIT;Etudiant;(09) 50 40 30 20;(06) 50 40 30 20;fatoucoulibaly@gmail.com
-DOE;JOHN;Capgemini;Auditeur;;;johndoe@gmail.com
-HAWA;TANTI;;;;004915253875972;bhfsaar@yahoo.de
