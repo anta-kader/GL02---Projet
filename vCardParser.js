@@ -2,8 +2,8 @@
 
 //Contact --> construct a new Contact
 var Contact = function(nom, prenom, organisation, fonction, telephone, mobile, courriel){
-	this.nom = nom;
-	this.prenom = prenom;
+	this.nom = nom.toUpperCase();
+	this.prenom = prenom.toUpperCase();
 	this.organisation = organisation;
 	this.fonction = fonction;
 	this.telephone = telephone;
@@ -25,14 +25,14 @@ Contact.prototype.writeCsv = function (){
 
 //check if a contact is equal to another one
 Contact.prototype.isEqualTo = function(c) {
-	if(this.nom === c.nom && this.prenom === c.prenom && 
-		this.organisation === c.organisation && this.fonction === c.fonction && 
-		this.telephone === c.telephone && this.mobile === c.mobile && 
+	if(this.nom === c.nom && this.prenom === c.prenom &&
+		this.organisation === c.organisation && this.fonction === c.fonction &&
+		this.telephone === c.telephone && this.mobile === c.mobile &&
 		this.courriel === c.courriel)
 			return true;
 	else
 			return false;
-	
+
 }
 
 //check if a contact is in the array
@@ -47,7 +47,7 @@ Contact.prototype.isInArray = function(array) {
 
 //get a contact id in an array using nom and prenom
 var extractContact = function(nom, prenom, array){
-	var contact;	
+	var contact;
 	var i = 0;
 	while(contact === undefined && i < array.length) {
 		if (array[i].nom === nom && array[i].prenom === prenom)
@@ -85,15 +85,15 @@ vCardParser.prototype.err = function(msg){
 vCardParser.prototype.tokenize = function(data){
 	var separator = /(\r\n|: )/;
 	data = data.split(separator);
-	data = data.filter(function(val, idx){ 
-		return !val.match(separator); 	
+	data = data.filter(function(val, idx){
+		return !val.match(separator);
 	});
 	return data;
 }
 
 // check file validity
 vCardParser.prototype.checkFile = function(data){
-	var input = this.tokenize(data);	
+	var input = this.tokenize(data);
 	var lastId = input.length - 1;
 	if(input[0] === "BEGIN:VCARD" && input[lastId] === "END:VCARD")
 		return true;
@@ -149,8 +149,8 @@ vCardParser.prototype.identite = function(dataTab) {
 		if(identite === matched[0])
 			return identite.split(" ");
 		else
-			this.err("Organisation non conforme");		
-	} else 
+			this.err("Organisation non conforme");
+	} else
 		return identite.split(" ");
 }
 
@@ -211,8 +211,8 @@ vCardParser.prototype.telephone = function(dataTab) {
 		else
 			this.err("Telephone non conforme");
 	}else
-		return telephone; 
-	
+		return telephone;
+
 }
 
 /**
@@ -226,7 +226,7 @@ vCardParser.prototype.mobile = function(dataTab) {
 	if(id !== -1){
 		mobile = value[id];
 		//check format before return
-		matched = mobile.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+		matched = mobile.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
 		if(mobile === matched[0])
 			return mobile;
 		else
@@ -260,12 +260,12 @@ vCardParser.prototype.courriel = function(dataTab) {
 
 vCardParser.prototype.parse = function(dataTab) {
 	var id = this.identite(dataTab);
-	this.contact = 
-		new Contact(id[1], id[0], 
-					this.organisation(dataTab), 
-					this.fonction(dataTab), 
-					this.telephone(dataTab), 
-					this.mobile(dataTab), 
+	this.contact =
+		new Contact(id[1], id[0],
+					this.organisation(dataTab),
+					this.fonction(dataTab),
+					this.telephone(dataTab),
+					this.mobile(dataTab),
 					this.courriel(dataTab)
 	);
 }
@@ -282,7 +282,7 @@ var parseVCard = function(){
 	  output: process.stdout
 	});
 
-	rl.question("\nVeuillez insérer l'url du fichier à importer \n", function(fileToParse) {	
+	rl.question("\nVeuillez insérer l'url du fichier à importer \n", function(fileToParse) {
 		//launch import
 		var fs = require("fs");
 
@@ -308,12 +308,12 @@ var parseVCard = function(){
 				for(var i = 0; i < data.length-1; i++){
 					ligne = data[i].split(";");
 					var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-					liste.push(cnt);	
+					liste.push(cnt);
 				}
 				//essayer de récupérer l'id du contact dans la liste
 				var contactId = extractContact(analyzer.contact.nom, analyzer.contact.prenom, liste);
 				if(contactId !== undefined) {
-					console.log('\nContact déjà présent :');					
+					console.log('\nContact déjà présent :');
 					console.log(liste[contactId]);
 					//demander si le contact doit être fusionné, ajouté ou remplacé
 					var questRL = readline.createInterface({
@@ -327,14 +327,14 @@ var parseVCard = function(){
 									if (err) return console.log("Erreur ! Base de données inexistante");
 									console.log('\nContact ajouté !');
 								});
-								break;	
+								break;
 							case "fusionner" :
 								liste[contactId].fusion(analyzer.contact);
 								// --> effacer tout ce que contient le fichier
 								fs.writeFile('database.txt', "", function (err) {
 									if (err) return console.log("Erreur ! Base de données inexistante");
 								});
-								// --> réécrire les données 
+								// --> réécrire les données
 								for(var i = 0; i < liste.length; i++){
 									fs.appendFile('database.txt', liste[i].write(), function (err) {
 										if (err) return console.log("Erreur ! Base de données inexistante");
@@ -349,7 +349,7 @@ var parseVCard = function(){
 								fs.writeFile('database.txt', "", function (err) {
 									if (err) return console.log("Erreur ! Base de données inexistante");
 								});
-								// --> réécrire les données 
+								// --> réécrire les données
 								for(var i = 0; i < liste.length; i++){
 									fs.appendFile('database.txt', liste[i].write(), function (err) {
 										if (err) return console.log("Erreur ! Base de données inexistante");
@@ -359,7 +359,7 @@ var parseVCard = function(){
 								break;
 							default :
 								console.log('\nCommande non trouvée --> opération annulée !');
-								break;				
+								break;
 						}
 					questRL.close();
 					});
@@ -368,14 +368,14 @@ var parseVCard = function(){
 					fs.appendFile('database.txt', analyzer.contact.write(), function (err) {
 						if (err) throw err;
 						console.log('\nContact ajouté !');
-					});	
+					});
 				}
 
 			});
-				
+
 		});
 		rl.close();
-	}); 
+	});
 }
 
 
@@ -394,8 +394,8 @@ var displayContactList = function(){
 		for(var i = 0; i < data.length-1; i++){
 			ligne = data[i].split(";");
 			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);	
-		}	
+			liste.push(cnt);
+		}
 		console.log(liste);
 	})
 };
@@ -441,8 +441,8 @@ var displayContact = function(nom, prenom){
 		for(var i = 0; i < data.length-1; i++){
 			ligne = data[i].split(";");
 			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);	
-		}	
+			liste.push(cnt);
+		}
 		var contactId = extractContact(nom, prenom, liste);
 		if(contactId !== undefined)
 			console.log(liste[contactId]);
@@ -475,8 +475,8 @@ var checkContact = function(nom, prenom){
 		for(var i = 0; i < data.length-1; i++){
 			ligne = data[i].split(";");
 			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);	
-		}	
+			liste.push(cnt);
+		}
 		var contactId = extractContact(nom, prenom, liste);
 		if(contactId !== undefined)
 			console.log(true);
@@ -499,14 +499,14 @@ var effacerDoublons = function(){
 		for(var i = 0; i < data.length-1; i++){
 			ligne = data[i].split(";");
 			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);	
-		}	
+			liste.push(cnt);
+		}
 		//effacer les doublons	du tableau
 		var listeCleared = [];
 		for(var i = 0; i < liste.length; i++){
 			if(!liste[i].isInArray(listeCleared))
 				listeCleared.push(liste[i]);
-		}	
+		}
 		//Effacer les doublons dans la BD
 		// --> effacer tout ce que contient le fichier
 		fs.writeFile('database.txt', "", function (err) {
@@ -549,7 +549,7 @@ var modifierContact = function(nom, prenom, property, newVal){
 		for(var i = 0; i < data.length-1; i++){
 			ligne = data[i].split(";");
 			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);	
+			liste.push(cnt);
 		}
 
 		//récupérer le contact à modifier
@@ -565,7 +565,7 @@ var modifierContact = function(nom, prenom, property, newVal){
 					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
 					if(matched[0] === newVal) {
 						liste[contactID].nom = newVal;
-						console.log("Nom contact modifié !");			
+						console.log("Nom contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
@@ -574,7 +574,7 @@ var modifierContact = function(nom, prenom, property, newVal){
 					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
 					if(matched[0] === newVal) {
 						liste[contactID].prenom = newVal;
-						console.log("Prenom contact modifié !");			
+						console.log("Prenom contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
@@ -583,7 +583,7 @@ var modifierContact = function(nom, prenom, property, newVal){
 					matched = newVal.match(/([a-z0-9âäàéèùêëîïôöçñ]|\s)+/i);
 					if(matched[0] === newVal) {
 						liste[contactID].organisation = newVal;
-						console.log("Organisation contact modifié !");			
+						console.log("Organisation contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
@@ -592,25 +592,25 @@ var modifierContact = function(nom, prenom, property, newVal){
 					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
 					if(matched[0] === newVal) {
 						liste[contactID].nom = newVal;
-						console.log("Fonction contact modifié !");			
+						console.log("Fonction contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
 					break;
 				case "telephone" :
-					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
 					if(matched[0] === newVal) {
 						liste[contactID].telephone = newVal;
-						console.log("Téléphone contact modifié !");			
+						console.log("Téléphone contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
 					break;
 				case "mobile" :
-					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);	
+					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
 					if(matched[0] === newVal) {
 						liste[contactID].mobile = newVal;
-						console.log("Mobile contact modifié !");			
+						console.log("Mobile contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
@@ -619,11 +619,11 @@ var modifierContact = function(nom, prenom, property, newVal){
 					matched = newVal.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
 					if(matched[0] === newVal) {
 						liste[contactID].courriel = newVal;
-						console.log("Courriel contact modifié !");			
+						console.log("Courriel contact modifié !");
 					}
 					else
 						console.log("Format inavlide");
-					break;		
+					break;
 				default:
 					break;
 			}
@@ -631,19 +631,19 @@ var modifierContact = function(nom, prenom, property, newVal){
 			//Effectuer la modif dans la BD
 			// --> effacer tout ce que contient le fichier
 			fs.writeFile('database.txt', "", function (err) {
-				if (err) 
+				if (err)
 					return console.log("Erreur ! Base de données inexistante")
 			});
 			// --> réécrire les données à partir du tableau sans les doublons
 			for(var i = 0; i < liste.length; i++){
 				fs.appendFile('database.txt', liste[i].write(), function (err) {
-					if (err) 
+					if (err)
 						return console.log("Erreur ! Base de données inexistante")
 				});
 			}
 		}
-	});	
-	
+	});
+
 };
 
 /**
@@ -657,16 +657,16 @@ var exportContactListe = function(){
 	  output: process.stdout
 	});
 
-	rl.question("\nVeuillez insérer l'url du fichier à exporter (sans l'extension) \n", function(fileToExport) {	
-		
+	rl.question("\nVeuillez insérer l'url du fichier à exporter (sans l'extension) \n", function(fileToExport) {
+
 		if(fileToExport === undefined || fileToExport === ""){
 			console.log("Pas de nom inséré --> opération annulée");
 			process.exit(0);
 		}
 
-		
+
 		var fs = require("fs");
-		
+
 		fs.readFile("database.txt", 'utf8', function (err,data) {
 			if (err) {
 				return console.log("Erreur ! Base de données inexistante")
@@ -678,7 +678,7 @@ var exportContactListe = function(){
 			for(var i = 0; i < data.length-1; i++){
 				ligne = data[i].split(";");
 				var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-				liste.push(cnt);	
+				liste.push(cnt);
 			}
 			//créer fichier à exporter avec en-tête csv
 			var enTete = "First Name;Last Name;Company;Job Title;Mobile Phone;Home Phone;E-mail Address\n";
@@ -686,7 +686,7 @@ var exportContactListe = function(){
 						if (err) throw err;
 					});
 			//ajouter chaque contact dans le fichier
-			for(var i = 0; i < liste.length; i++){		
+			for(var i = 0; i < liste.length; i++){
 				fs.appendFile(fileToExport + ".csv", liste[i].writeCsv(), function (err) {
 							if (err) throw err;
 						});
@@ -694,7 +694,7 @@ var exportContactListe = function(){
 		});
 		console.log("Fichier exporté !")
 		rl.close();
-	}); 
+	});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -714,7 +714,7 @@ switch(arg[2]){
 		effacerDoublons();
 		break;
 	case "modif":
-		modifierContact(arg[3], arg[4], arg[5], arg[6]);
+		modifierContact(arg[3].toUpperCase(), arg[4].toUpperCase(), arg[5], arg[6]);
 		break;
 	case "export":
 		exportContactListe();
@@ -723,17 +723,11 @@ switch(arg[2]){
 		displayContactNb();
 		break;
 	case "find":
-		displayContact(arg[3], arg[4]);
+		displayContact(arg[3].toUpperCase(), arg[4].toUpperCase());
 		break;
 	case "check":
-		checkContact(arg[3], arg[4]);
+		checkContact(arg[3].toUpperCase(), arg[4].toUpperCase());
 		break;
 	default:
 		console.log("Command not found")
 }
-
-
-
-
-
-
