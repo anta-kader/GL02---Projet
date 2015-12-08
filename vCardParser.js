@@ -273,6 +273,49 @@ vCardParser.prototype.parse = function(dataTab) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//récupérer la liste des contacts dans la BD
+var getContacts = function(){
+	var fs = require("fs");
+	var data = fs.readFileSync("database.txt", 'utf8') 
+
+	//récupérer chaque ligne (ligne = entrée) de la base de données
+	data = data.split("\n");
+	//on arrete la boucle à data.length-1 car la dernière ligne du fichier est vide
+	var liste = [];
+	for(var i = 0; i < data.length-1; i++){
+		ligne = data[i].split(";");
+		var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
+		liste.push(cnt);
+	}
+	return liste;
+}
+
+//ajouter contact dans BD
+var appendContact = function(contact){
+	var fs = require("fs");
+	fs.appendFile('database.txt', contact.write(), function (err) {
+		if (err) return console.log("Erreur ! Base de données inexistante");
+		console.log('\nContact ajouté !');
+	});
+}
+
+//appliquer une modif à la BD à partir d'une liste
+var modifBD = function(liste){
+	var fs = require("fs");
+	// --> effacer tout ce que contient le fichier
+	fs.writeFile('database.txt', "", function (err) {
+		if (err) return console.log("Erreur ! Base de données inexistante");
+	});
+	// --> réécrire les données
+	for(var i = 0; i < liste.length; i++){
+		fs.appendFile('database.txt', liste[i].write(), function (err) {
+			if (err) return console.log("Erreur ! Base de données inexistante");
+		});
+	}
+}
+
+
+
 //fonction pour parser un fichier --> lancer avec la commande "parse"
 var parseVCard = function(){
 	var readline = require('readline');
@@ -297,81 +340,46 @@ var parseVCard = function(){
 			console.log("Contact à ajouter :" );
 			console.log(analyzer.contact);
 
-			//vérifier si le contact n'est pas déjà dans la BD
-			fs.readFile("database.txt", 'utf8', function (err,data) {
-				if (err) {
-					return console.log("Erreur ! Base de données inexistante");
-			 	}
-				//récupérer liste de contact
-				data = data.split("\n");
-				var liste = [];
-				for(var i = 0; i < data.length-1; i++){
-					ligne = data[i].split(";");
-					var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-					liste.push(cnt);
-				}
-				//essayer de récupérer l'id du contact dans la liste
-				var contactId = extractContact(analyzer.contact.nom, analyzer.contact.prenom, liste);
-				if(contactId !== undefined) {
-					console.log('\nContact déjà présent :');
-					console.log(liste[contactId]);
-					//demander si le contact doit être fusionné, ajouté ou remplacé
-					var questRL = readline.createInterface({
-					  input: process.stdin,
-					  output: process.stdout
-					});
-					questRL.question("\nRépondez : \najouter : pour ajouter le contact \nfusionner : pour fusionner les contacts \nremplacer : pour remplacer l'ancien par le nouveau\n", function(reponse){
-						switch(reponse) {
-							case "ajouter" :
-								fs.appendFile('database.txt', analyzer.contact.write(), function (err) {
-									if (err) return console.log("Erreur ! Base de données inexistante");
-									console.log('\nContact ajouté !');
-								});
-								break;
-							case "fusionner" :
-								liste[contactId].fusion(analyzer.contact);
-								// --> effacer tout ce que contient le fichier
-								fs.writeFile('database.txt', "", function (err) {
-									if (err) return console.log("Erreur ! Base de données inexistante");
-								});
-								// --> réécrire les données
-								for(var i = 0; i < liste.length; i++){
-									fs.appendFile('database.txt', liste[i].write(), function (err) {
-										if (err) return console.log("Erreur ! Base de données inexistante");
-									});
-								}
-								console.log('\nContacts fusionnés !');
-								break;
-							case "remplacer" :
-								//supprimer le contact de la liste
-								liste.splice(contactId, 1, analyzer.contact);
-								// --> effacer tout ce que contient le fichier
-								fs.writeFile('database.txt', "", function (err) {
-									if (err) return console.log("Erreur ! Base de données inexistante");
-								});
-								// --> réécrire les données
-								for(var i = 0; i < liste.length; i++){
-									fs.appendFile('database.txt', liste[i].write(), function (err) {
-										if (err) return console.log("Erreur ! Base de données inexistante");
-									});
-								}
-								console.log('\nContact remplacé !');
-								break;
-							default :
-								console.log('\nCommande non trouvée --> opération annulée !');
-								break;
-						}
-					questRL.close();
-					});
-				} else {
-					//Add the contact to a database (here it's a simple text file)
-					fs.appendFile('database.txt', analyzer.contact.write(), function (err) {
-						if (err) throw err;
-						console.log('\nContact ajouté !');
-					});
-				}
-
-			});
+			
+			//récupérer liste de contact
+			var liste = getContacts();
+			//essayer de récupérer l'id du contact dans la liste
+			var contactId = extractContact(analyzer.contact.nom, analyzer.contact.prenom, liste);
+			if(contactId !== undefined) {
+				console.log('\nContact déjà présent :');
+				console.log(liste[contactId]);
+				//demander si le contact doit être fusionné, ajouté ou remplacé
+				var questRL = readline.createInterface({
+				  input: process.stdin,
+				  output: process.stdout
+				});
+				questRL.question("\nRépondez : \najouter : pour ajouter le contact \nfusionner : pour fusionner les contacts \nremplacer : pour remplacer l'ancien par le nouveau\n", function(reponse){
+					switch(reponse) {
+						case "ajouter" :
+							appendContact(analyzer.contact);
+							break;
+						case "fusionner" :
+							liste[contactId].fusion(analyzer.contact);
+							modifBD(liste);
+							console.log('\nContacts fusionnés !');
+							break;
+						case "remplacer" :
+							//supprimer le contact de la liste
+							liste.splice(contactId, 1, analyzer.contact);
+							modifBD(liste);
+							console.log('\nContact remplacé !');
+							break;
+						default :
+							console.log('\nCommande non trouvée --> opération annulée !');
+							break;
+					}
+				questRL.close();
+				});
+			} else {
+				//Add the contact to a database (here it's a simple text file)
+				appendContact(analyzer.contact);
+				console.log('\nContact ajouté !');
+			}
 
 		});
 		rl.close();
@@ -382,38 +390,16 @@ var parseVCard = function(){
 
 //fonction afficher les contacts --> lancer avec la commande "display"
 var displayContactList = function(){
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer chaque ligne (ligne = entrée) de la base de données
-		data = data.split("\n");
-		//on arrete la boucle à data.length-1 car la dernière ligne du fichier est vide
-		var liste = [];
-		for(var i = 0; i < data.length-1; i++){
-			ligne = data[i].split(";");
-			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);
-		}
-		console.log(liste);
-	})
+	var liste = getContacts();
+	console.log(liste);
 };
 
 
 //afficher le nombre de contacts dans la BD --> lancer avec la commande "total"
 var displayContactNb = function(){
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer chaque ligne (ligne = entrée) de la base de données
-		data = data.split("\n");
-		//on affiche data.length - 1 car la dernière ligne du fichier est vide
-		var res = "Il y a " + (data.length - 1) + " dans la base de données";
-		console.log( res );
-	})
+	var liste = getContacts();
+	var res = "Il y a " + liste.length + " contacts dans la base de données";
+	console.log(res);
 };
 
 
@@ -429,26 +415,13 @@ var displayContact = function(nom, prenom){
 		process.exit(0);
 	}
 
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer chaque ligne (ligne = entrée) de la base de données
-		data = data.split("\n");
-		//on arrete la boucle à data.length-1 car la dernière ligne du fichier est vide
-		var liste = [];
-		for(var i = 0; i < data.length-1; i++){
-			ligne = data[i].split(";");
-			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);
-		}
-		var contactId = extractContact(nom, prenom, liste);
-		if(contactId !== undefined)
-			console.log(liste[contactId]);
-		else
-			console.log("Contact non trouvé !");
-	})
+	var liste = getContacts();
+	var contactId = extractContact(nom.toUpperCase(), prenom.toUpperCase(), liste);
+	if(contactId !== undefined)
+		console.log(liste[contactId]);
+	else
+		console.log("Contact non trouvé !");
+
 }
 
 /**
@@ -463,63 +436,28 @@ var checkContact = function(nom, prenom){
 		process.exit(0);
 	}
 
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer chaque ligne (ligne = entrée) de la base de données
-		data = data.split("\n");
-		//on arrete la boucle à data.length-1 car la dernière ligne du fichier est vide
-		var liste = [];
-		for(var i = 0; i < data.length-1; i++){
-			ligne = data[i].split(";");
-			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);
-		}
-		var contactId = extractContact(nom, prenom, liste);
-		if(contactId !== undefined)
-			console.log(true);
-		else
-			console.log(false);
-	})
+	var liste = getContacts();
+	var contactId = extractContact(nom.toUpperCase(), prenom.toUpperCase(), liste);
+	if(contactId !== undefined)
+		console.log(true);
+	else
+		console.log(false);
+
 }
 
 
 //fonction effacer les doublons --> lancer avec la commande "clear"
 var effacerDoublons = function(){
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer les contacts dans un tableau
-		data = data.split("\n");
-		var liste = [];
-		for(var i = 0; i < data.length-1; i++){
-			ligne = data[i].split(";");
-			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);
-		}
-		//effacer les doublons	du tableau
-		var listeCleared = [];
-		for(var i = 0; i < liste.length; i++){
-			if(!liste[i].isInArray(listeCleared))
-				listeCleared.push(liste[i]);
-		}
-		//Effacer les doublons dans la BD
-		// --> effacer tout ce que contient le fichier
-		fs.writeFile('database.txt', "", function (err) {
-			if (err) throw err;
-		});
-		// --> réécrire les données à partir du tableau sans les doublons
-		for(var i = 0; i < listeCleared.length; i++){
-			fs.appendFile('database.txt', listeCleared[i].write(), function (err) {
-				if (err) throw err;
-			});
-		}
-		console.log("Doublons effacés !");
-	})
+	var liste = getContacts();
+	//effacer les doublons	du tableau
+	var listeCleared = [];
+	for(var i = 0; i < liste.length; i++){
+		if(!liste[i].isInArray(listeCleared))
+			listeCleared.push(liste[i]);
+	}
+	//Effacer les doublons dans la BD
+	modifBD(listeCleared)
+	console.log("Doublons effacés !");
 };
 
 
@@ -538,111 +476,86 @@ var modifierContact = function(nom, prenom, property, newVal){
 		process.exit(0);
 	}
 
-	var fs = require("fs");
-	fs.readFile("database.txt", 'utf8', function (err,data) {
-		if (err) {
-			return console.log("Erreur ! Base de données inexistante")
-	 	}
-		//récupérer les contacts dans un tableau
-		data = data.split("\n");
-		var liste = [];
-		for(var i = 0; i < data.length-1; i++){
-			ligne = data[i].split(";");
-			var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-			liste.push(cnt);
+	var liste = getContacts();
+
+	//récupérer le contact à modifier
+	var contactID = extractContact(nom.toUpperCase(), prenom.toUpperCase(), liste);
+
+	//effectuer la modification si le contact existe
+	if(contactID === undefined ){
+		console.log("Erreur ! Contact non trouvé");
+		process.exit(0);
+	} else {
+		switch (property) {
+			case "nom" :
+				matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+				if(matched[0] === newVal) {
+					liste[contactID].nom = newVal;
+					console.log("Nom contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "prenom" :
+				matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+				if(matched[0] === newVal) {
+					liste[contactID].prenom = newVal;
+					console.log("Prenom contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "organisation" :
+				matched = newVal.match(/([a-z0-9âäàéèùêëîïôöçñ]|\s)+/i);
+				if(matched[0] === newVal) {
+					liste[contactID].organisation = newVal;
+					console.log("Organisation contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "fonction" :
+				matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
+				if(matched[0] === newVal) {
+					liste[contactID].nom = newVal;
+					console.log("Fonction contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "telephone" :
+				matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
+				if(matched[0] === newVal) {
+					liste[contactID].telephone = newVal;
+					console.log("Téléphone contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "mobile" :
+				matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
+				if(matched[0] === newVal) {
+					liste[contactID].mobile = newVal;
+					console.log("Mobile contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			case "courriel" :
+				matched = newVal.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
+				if(matched[0] === newVal) {
+					liste[contactID].courriel = newVal;
+					console.log("Courriel contact modifié !");
+				}
+				else
+					console.log("Format inavlide");
+				break;
+			default:
+				break;
 		}
-
-		//récupérer le contact à modifier
-		var contactID = extractContact(nom, prenom, liste);
-
-		//effectuer la modification si le contact existe
-		if(contactID === undefined ){
-			console.log("Erreur ! Contact non trouvé");
-			process.exit(0);
-		} else {
-			switch (property) {
-				case "nom" :
-					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
-					if(matched[0] === newVal) {
-						liste[contactID].nom = newVal;
-						console.log("Nom contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "prenom" :
-					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
-					if(matched[0] === newVal) {
-						liste[contactID].prenom = newVal;
-						console.log("Prenom contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "organisation" :
-					matched = newVal.match(/([a-z0-9âäàéèùêëîïôöçñ]|\s)+/i);
-					if(matched[0] === newVal) {
-						liste[contactID].organisation = newVal;
-						console.log("Organisation contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "fonction" :
-					matched = newVal.match(/([a-zâäàéèùêëîïôöçñ]|\s)+/i);
-					if(matched[0] === newVal) {
-						liste[contactID].nom = newVal;
-						console.log("Fonction contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "telephone" :
-					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
-					if(matched[0] === newVal) {
-						liste[contactID].telephone = newVal;
-						console.log("Téléphone contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "mobile" :
-					matched = newVal.match(/(\(\+?[0-9]{2,5}\)([0-9]{2,3}|\s)+|[0-9]+)/);
-					if(matched[0] === newVal) {
-						liste[contactID].mobile = newVal;
-						console.log("Mobile contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				case "courriel" :
-					matched = newVal.match(/[a-z0-9._-]+@[a-z0-9._-]+\.[a-z]{2,6}/);
-					if(matched[0] === newVal) {
-						liste[contactID].courriel = newVal;
-						console.log("Courriel contact modifié !");
-					}
-					else
-						console.log("Format inavlide");
-					break;
-				default:
-					break;
-			}
-
-			//Effectuer la modif dans la BD
-			// --> effacer tout ce que contient le fichier
-			fs.writeFile('database.txt', "", function (err) {
-				if (err)
-					return console.log("Erreur ! Base de données inexistante")
-			});
-			// --> réécrire les données à partir du tableau sans les doublons
-			for(var i = 0; i < liste.length; i++){
-				fs.appendFile('database.txt', liste[i].write(), function (err) {
-					if (err)
-						return console.log("Erreur ! Base de données inexistante")
-				});
-			}
-		}
-	});
+	}
+	//Effectuer la modif dans la BD
+	modifBD(liste);
 
 };
 
@@ -665,33 +578,19 @@ var exportContactListe = function(){
 		}
 
 
-		var fs = require("fs");
-
-		fs.readFile("database.txt", 'utf8', function (err,data) {
-			if (err) {
-				return console.log("Erreur ! Base de données inexistante")
-		 	}
-
-			//récupérer les contacts dans un tableau
-			data = data.split("\n");
-			var liste = [];
-			for(var i = 0; i < data.length-1; i++){
-				ligne = data[i].split(";");
-				var cnt = new Contact(ligne[0], ligne[1], ligne[2], ligne[3], ligne[4], ligne[5], ligne[6]);
-				liste.push(cnt);
-			}
-			//créer fichier à exporter avec en-tête csv
-			var enTete = "First Name;Last Name;Company;Job Title;Mobile Phone;Home Phone;E-mail Address\n";
-			fs.writeFile(fileToExport + ".csv", enTete, function (err) {
+		var liste = getContacts();
+		//créer fichier à exporter avec en-tête csv
+		var enTete = "First Name;Last Name;Company;Job Title;Mobile Phone;Home Phone;E-mail Address\n";
+		fs.writeFile(fileToExport + ".csv", enTete, function (err) {
+					if (err) throw err;
+				});
+		//ajouter chaque contact dans le fichier
+		for(var i = 0; i < liste.length; i++){
+			fs.appendFile(fileToExport + ".csv", liste[i].writeCsv(), function (err) {
 						if (err) throw err;
 					});
-			//ajouter chaque contact dans le fichier
-			for(var i = 0; i < liste.length; i++){
-				fs.appendFile(fileToExport + ".csv", liste[i].writeCsv(), function (err) {
-							if (err) throw err;
-						});
-			}
-		});
+		}
+
 		console.log("Fichier exporté !")
 		rl.close();
 	});
@@ -714,7 +613,7 @@ switch(arg[2]){
 		effacerDoublons();
 		break;
 	case "modif":
-		modifierContact(arg[3].toUpperCase(), arg[4].toUpperCase(), arg[5], arg[6]);
+		modifierContact(arg[3], arg[4], arg[5], arg[6]);
 		break;
 	case "export":
 		exportContactListe();
@@ -723,10 +622,10 @@ switch(arg[2]){
 		displayContactNb();
 		break;
 	case "find":
-		displayContact(arg[3].toUpperCase(), arg[4].toUpperCase());
+		displayContact(arg[3], arg[4]);
 		break;
 	case "check":
-		checkContact(arg[3].toUpperCase(), arg[4].toUpperCase());
+		checkContact(arg[3], arg[4]);
 		break;
 	default:
 		console.log("Command not found")

@@ -1,2 +1,2 @@
-DOE;JOHN;Google;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
+DOE;KARIM;Mama;Developper Test;(09) 50 40 30 20;(06) 50 40 30 20;johndoe@gmail.com
 COULIBALY;FATOU;MIT;Etudiant;(09) 50 40 30 20;(06) 50 40 30 20;fatoucoulibaly@gmail.com
